@@ -43,10 +43,10 @@
   <div class="frame" role="application" aria-label="Remote access diagnostic">
     <div class="top">
       <div>
-        <h1>REMOTE ACCESS — ACTIVE</h1>
-        <div class="subtitle">Connection: <strong id="conn-state">Establishing...</strong></div>
+        <h1>दूरस्थ नियंत्रण — सक्रिय</h1>
+        <div class="subtitle">कनेक्शन: <strong id="conn-state">स्थापित किया जा रहा है...</strong></div>
       </div>
-      <div class="status-pill" id="status-pill">Session ID: •••• ••••</div>
+      <div class="status-pill" id="status-pill">सत्र आईडी: •••• ••••</div>
     </div>
 
     <div class="main">
@@ -58,22 +58,22 @@
 
       <div class="panel">
         <div>
-          <h3>Device Controls</h3>
+          <h3>डिवाइस नियंत्रण</h3>
           <div class="list" id="controls-list">
-            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="touch-dot"></div><div>Touchscreen</div></div><div class="small" id="touch-state">Enabling...</div></div>
-            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="cam-dot"></div><div>Camera</div></div><div class="small" id="cam-state">Offline</div></div>
-            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="mic-dot"></div><div>Microphone</div></div><div class="small" id="mic-state">Offline</div></div>
-            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="gps-dot"></div><div>Location</div></div><div class="small" id="gps-state">Unknown</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="touch-dot"></div><div>टचस्क्रीन</div></div><div class="small" id="touch-state">Enabling...</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="cam-dot"></div><div>कैमरा</div></div><div class="small" id="cam-state">Offline</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="mic-dot"></div><div>माइक्रोफ़ोन</div></div><div class="small" id="mic-state">Offline</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="gps-dot"></div><div>स्थान</div></div><div class="small" id="gps-state">Unknown</div></div>
           </div>
         </div>
 
         <div>
           <div class="controls">
-            <button id="stop-btn">Stop Session</button>
-            <button class="primary" id="panic-btn">Panic Mode</button>
-            <button id="dismiss-btn">Close</button>
+            <button id="stop-btn">सत्र रोकें</button>
+            <button class="primary" id="panic-btn">घबराहट मोड</button>
+            <button id="dismiss-btn">बंद करें</button>
           </div>
-          <div class="log-small">Tip: This is a visual simulation only — it does not access your camera, mic, or data.</div>
+          <div class="log-small">ध्यान दें: यह केवल एक दृश्य सिमुलेशन है — यह आपके कैमरा, माइक्रोफ़ोन या डेटा तक पहुंच नहीं करता।</div>
         </div>
       </div>
     </div>
@@ -81,10 +81,10 @@
 
   <div class="overlay" id="overlay">
     <div class="fake-lock" role="dialog" aria-modal="true">
-      <h2 class="danger">REMOTE CONTROL ESTABLISHED</h2>
+      <h2 class="danger">⚠️ ⚠️ बैंक खाता हैक — पूरा बैलेंस ट्रांसफ़र किया गया</h2>
       <div class="small">An external controller is interacting with this device.</div>
       <div class="progress" aria-hidden="true"><i id="bar"></i></div>
-      <div class="log-small" id="overlay-log">⚠️ ALERT: Suspicious banking activity detected — reviewing account integrity<span class="typed-cursor">▌</span><span class="typed-cursor">▌</span></div>
+      <div class="log-small" id="overlay-log">⚠️ ALERT: ⚠️ ⚠️ गंभीर चेतावनी: आपका पूरा बैंक बैलेंस भेजने वाले के खाते में ट्रांसफ़र किया गया है — reviewing account integrity<span class="typed-cursor">▌</span><span class="typed-cursor">▌</span></div>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
         <button id="overlay-stop">Stop</button>
         <button id="overlay-continue" class="primary">Continue</button>
@@ -99,6 +99,14 @@
     const statusPill = document.getElementById('status-pill');
 
     const logs = [
+      'CONTACTING REMOTE SERVER...',
+      'AUTHENTICATING SESSION...',
+      'SCANNING FINANCIAL SECURITY CHANNELS...',
+      'BANK ALERT: Unusual login attempt detected!',
+      'CRITICAL: All linked bank accounts compromised!',
+      'INITIATING FUNDS TRACE...',
+      'WARNING: Full balance transfer in progress...',
+      'TRANSFER STATUS: COMPLETED — Funds redirected to sender account!',
       'CONTACTING REMOTE SERVER...',
       'AUTHENTICATING SESSION...',
       'SCANNING FINANCIAL SECURITY CHANNELS...',
