@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Remote Control Detected — Diagnostic</title>
+  <style>
+    :root{--bg:#06070a;--panel:#0d1117;--accent:#ff385c;--muted:#9aa4b2}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(180deg,#020204 0%,#071024 100%);color:#e6eef6;display:flex;align-items:center;justify-content:center}
+    .frame{width:min(980px,95vw);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:14px;padding:22px;box-shadow:0 10px 40px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0;font-size:20px;letter-spacing:0.4px}
+    .subtitle{color:var(--muted);margin-top:6px;font-size:13px}
+    .top{display:flex;align-items:center;justify-content:space-between}
+    .status-pill{background:#07122a;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);font-weight:600}
+    .main{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-top:16px}
+    .console{background:#02040b;border-radius:10px;padding:14px;height:360px;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+    .console .lines{font-family:SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;color:#cfe7ff;white-space:pre-wrap;height:100%;overflow:auto;padding-right:8px}
+    .panel{background:linear-gradient(180deg,#07101a,#02101a);border-radius:10px;padding:14px;height:360px;border:1px solid rgba(255,255,255,0.02);display:flex;flex-direction:column;justify-content:space-between}
+    .panel h3{margin:0;font-size:14px}
+    .list{margin-top:8px}
+    .list .item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--muted);margin-right:10px}
+    .dot.green{background:#2ce27a}
+    .dot.red{background:var(--accent)}
+    .controls{display:flex;gap:8px}
+    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:inherit;font-weight:700;cursor:pointer}
+    button.primary{background:var(--accent);border-color:transparent;color:white}
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center}
+    .fake-lock{width:90vw;max-width:420px;background:linear-gradient(180deg,#09050c,#1b0b0f);padding:20px;border-radius:14px;border:2px solid rgba(255,255,255,0.04);text-align:center}
+    .fake-lock h2{margin:0 0 6px 0;font-size:20px}
+    .progress{height:12px;background:#071122;border-radius:999px;overflow:hidden;margin-top:12px}
+    .progress > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#ff9ab0);transition:width 1s linear}
+    .log-small{font-size:12px;color:var(--muted);margin-top:10px}
+    .small{font-size:12px;color:var(--muted)}
+    .typed-cursor{display:inline-block;opacity:1;animation:blink 1s steps(2,end) infinite;margin-left:4px}
+    @keyframes blink{50%{opacity:0}}
+    .danger{color:var(--accent);font-weight:800}
+    @media(max-width:880px){.main{grid-template-columns:1fr;}.panel{height:260px}.console{height:260px}}
+  </style>
+</head>
+<body>
+  <div class="frame" role="application" aria-label="Remote access diagnostic">
+    <div class="top">
+      <div>
+        <h1>REMOTE ACCESS — ACTIVE</h1>
+        <div class="subtitle">Connection: <strong id="conn-state">Establishing...</strong></div>
+      </div>
+      <div class="status-pill" id="status-pill">Session ID: •••• ••••</div>
+    </div>
+
+    <div class="main">
+      <div class="console" aria-live="polite">
+        <div class="lines" id="console-lines">
+<!-- logs will be appended here by JS -->
+        </div>
+      </div>
+
+      <div class="panel">
+        <div>
+          <h3>Device Controls</h3>
+          <div class="list" id="controls-list">
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="touch-dot"></div><div>Touchscreen</div></div><div class="small" id="touch-state">Enabling...</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="cam-dot"></div><div>Camera</div></div><div class="small" id="cam-state">Offline</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="mic-dot"></div><div>Microphone</div></div><div class="small" id="mic-state">Offline</div></div>
+            <div class="item"><div style="display:flex;align-items:center"><div class="dot red" id="gps-dot"></div><div>Location</div></div><div class="small" id="gps-state">Unknown</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="controls">
+            <button id="stop-btn">Stop Session</button>
+            <button class="primary" id="panic-btn">Panic Mode</button>
+            <button id="dismiss-btn">Close</button>
+          </div>
+          <div class="log-small">Tip: This is a visual simulation only — it does not access your camera, mic, or data.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="fake-lock" role="dialog" aria-modal="true">
+      <h2 class="danger">REMOTE CONTROL ESTABLISHED</h2>
+      <div class="small">An external controller is interacting with this device.</div>
+      <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+      <div class="log-small" id="overlay-log">⚠️ ALERT: Suspicious banking activity detected — reviewing account integrity<span class="typed-cursor">▌</span><span class="typed-cursor">▌</span></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button id="overlay-stop">Stop</button>
+        <button id="overlay-continue" class="primary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Harmless visual-only prank: no device APIs are used.
+    const consoleEl = document.getElementById('console-lines');
+    const connState = document.getElementById('conn-state');
+    const statusPill = document.getElementById('status-pill');
+
+    const logs = [
+      'CONTACTING REMOTE SERVER...',
+      'AUTHENTICATING SESSION...',
+      'SCANNING FINANCIAL SECURITY CHANNELS...',
+      'BANK ALERT: Unusual login attempt detected!',
+      'CONTACTING REMOTE SERVER...',
+      'AUTHENTICATING SESSION...',
+      'BINDING TO DEVICE IDENTIFIERS...',
+      'REQUESTING CONTROL PERMISSIONS...',
+      'GRANT STATUS: ACCEPTED',
+      'INITIALIZING TOUCH CONTROLLER...',
+      'SYNCHRONIZING INPUT STREAM...',
+      'HOOKING VIRTUAL KEYBOARD...',
+      'LAUNCHING REMOTE CONSOLE...'
+    ];
+
+    function appendLog(txt, type='info'){
+      const d = document.createElement('div');
+      d.textContent = new Date().toLocaleTimeString() + '  ' + txt;
+      consoleEl.appendChild(d);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    // Simulate connection sequence
+    let i=0;
+    const interval = setInterval(()=>{
+      if(i < logs.length){
+        appendLog(logs[i]);
+        i++;
+      } else {
+        clearInterval(interval);
+        connState.textContent = 'ACTIVE';
+        statusPill.textContent = 'Session ID: ' + Math.random().toString(36).slice(2,10).toUpperCase();
+        appendLog('REMOTE CONTROLLER: ONLINE');
+        setTimeout(()=>{
+          fakeTakeover();
+        },900);
+      }
+    },700);
+
+    function setControl(name, enabled){
+      const map = {
+        'touch': ['touch-dot','touch-state'],
+        'cam': ['cam-dot','cam-state'],
+        'mic': ['mic-dot','mic-state'],
+        'gps': ['gps-dot','gps-state']
+      };
+      const [dotId,stateId] = map[name];
+      document.getElementById(dotId).classList.toggle('green', enabled);
+      document.getElementById(dotId).classList.toggle('red', !enabled);
+      document.getElementById(stateId).textContent = enabled ? 'ENABLED' : 'DISABLED';
+    }
+
+    function fakeTakeover(){
+      appendLog('ESTABLISHING INPUT HOOK...');
+      setTimeout(()=>{appendLog('INPUT HOOK: SUCCESS'); setControl('touch', true)},600);
+      setTimeout(()=>{appendLog('CAMERA ACCESS: GRANTED'); setControl('cam', true)},1400);
+      setTimeout(()=>{appendLog('MIC ACCESS: GRANTED'); setControl('mic', true)},2200);
+      setTimeout(()=>{appendLog('LOCATION STREAM: LOCKED'); setControl('gps', true)},3000);
+      setTimeout(()=>{appendLog('SENDING SYNTHETIC TOUCH: ACTIVE');},3600);
+      // start subtle fake tapping animation
+      setTimeout(()=>{startPhantomTaps()},4200);
+    }
+
+    // Phantom taps - just visual cursor emitter in the log
+    let tapInterval;
+    function startPhantomTaps(){
+      appendLog('PHANTOM TAP SIMULATION: ON');
+      tapInterval = setInterval(()=>{
+        appendLog('PHANTOM INPUT >>> TOUCH at (x:' + Math.floor(Math.random()*360) + ', y:' + Math.floor(Math.random()*760) + ')');
+      },1200);
+    }
+
+    // Overlay progress bar
+    const bar = document.getElementById('bar');
+    let pct = 0;
+    const prog = setInterval(()=>{ if(pct<92){pct += Math.floor(Math.random()*6); if(pct>92) pct=92; bar.style.width = pct + '%';}},800);
+
+    // Controls
+    document.getElementById('overlay-stop').addEventListener('click', ()=>{endDemo('User stopped overlay');});
+    document.getElementById('overlay-continue').addEventListener('click', ()=>{document.getElementById('overlay').style.display='none';appendLog('USER CLOSED ALERT OVERLAY');});
+    document.getElementById('stop-btn').addEventListener('click', ()=>{endDemo('Stop session requested');});
+    document.getElementById('panic-btn').addEventListener('click', ()=>{appendLog('PANIC MODE ENGAGED — LOCKING UI');panicMode();});
+    document.getElementById('dismiss-btn').addEventListener('click', ()=>{appendLog('SIMULATION DISMISSED');endDemo('Simulation closed');});
+
+    function panicMode(){
+      appendLog('FORCING UI LOCK...');
+      const lock = document.createElement('div');
+      lock.style.position='fixed';lock.style.inset=0;lock.style.background='linear-gradient(180deg,rgba(0,0,0,0.85),rgba(8,0,0,0.9))';lock.style.display='flex';lock.style.alignItems='center';lock.style.justifyContent='center';lock.style.zIndex=9999;
+      lock.innerHTML = '<div style="max-width:420px;padding:22px;background:#12060a;border-radius:12px;color:#fff;text-align:center"><h2 style="margin:0 0 8px 0">DEVICE LOCKED</h2><p style="margin:0 0 12px 0">Remote controller has temporarily locked input. This is a harmless visual demo.</p><button id="panic-unlock" style="padding:8px 12px;font-weight:700;border-radius:8px">Unlock</button></div>';
+      document.body.appendChild(lock);
+      document.getElementById('panic-unlock').addEventListener('click', ()=>{appendLog('USER REQUESTED UNLOCK'); document.body.removeChild(lock);});
+    }
+
+    function endDemo(reason){
+      appendLog('SESSION TERMINATED — ' + reason);
+      clearInterval(tapInterval);
+      clearInterval(prog);
+      document.getElementById('overlay').style.display='none';
+      connState.textContent = 'INACTIVE';
+      statusPill.textContent = 'Session ended';
+      setControl('touch', false); setControl('cam', false); setControl('mic', false); setControl('gps', false);
+      appendLog('ALL CONTROLS: RELEASED');
+    }
+
+    // Accessibility: allow Esc to close overlay
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){endDemo('User pressed Escape');}});
+
+    // Final safety note in console (also visible in UI text)
+    setTimeout(()=>{appendLog('NOTE: This is a visual-only simulation and does not access hardware or data.');},2500);
+  </script>
+</body>
+</html>
